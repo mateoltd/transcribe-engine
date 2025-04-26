@@ -8,6 +8,11 @@ interface AudioAnalyzerHook {
   stopRecording: () => void;
 }
 
+/**
+ * Hook for analyzing audio input from the microphone
+ * 
+ * @returns Object containing audio data, volume, recording state, and control functions
+ */
 export function useAudioAnalyzer(): AudioAnalyzerHook {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);

@@ -2,13 +2,16 @@
 
 import dynamic from 'next/dynamic';
 
-// Dynamically import the AudioBubble component with no SSR
-// This is necessary because it uses browser APIs that aren't available during server rendering
-const AudioBubble = dynamic(
-  () => import('./audio-bubble'),
+// Dynamically import the AudioVisualizer component with no SSR
+const AudioVisualizer = dynamic(
+  () => import('./audio-visualizer'),
   { ssr: false }
 );
 
+/**
+ * Client component wrapper for the AudioVisualizer
+ * This allows us to use dynamic import with ssr: false in a client component
+ */
 export default function AudioBubbleWrapper() {
-  return <AudioBubble />;
+  return <AudioVisualizer />;
 }

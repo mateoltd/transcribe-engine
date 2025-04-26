@@ -1,7 +1,4 @@
-import * as THREE from 'three';
-
-// Vertex shader for the bubble
-const vertexShader = `
+export const vertexShader = `
   uniform float uTime;
   uniform float uAmplitude;
   uniform float uFrequency;
@@ -97,51 +94,3 @@ const vertexShader = `
     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
   }
 `;
-
-// Fragment shader for the bubble
-const fragmentShader = `
-  uniform float uTime;
-  uniform vec3 uColor;
-  uniform float uBrightness;
-  
-  varying vec2 vUv;
-  varying vec3 vNormal;
-  varying vec3 vPosition;
-  
-  void main() {
-    // Calculate fresnel effect (edge glow)
-    vec3 viewDirection = normalize(cameraPosition - vPosition);
-    float fresnel = pow(1.0 - dot(viewDirection, vNormal), 3.0);
-    
-    // Create a pulsing glow effect
-    float pulse = sin(uTime * 0.5) * 0.5 + 0.5;
-    
-    // Combine base color with fresnel and pulse
-    vec3 color = mix(uColor, vec3(1.0, 1.0, 1.0), fresnel * 0.7);
-    
-    // Apply brightness from audio
-    color = mix(color, vec3(0.0, 0.5, 1.0), uBrightness * 0.5);
-    
-    // Add glow based on fresnel
-    color += vec3(0.0, 0.3, 0.8) * fresnel * 0.8 * (pulse * 0.3 + 0.7);
-    
-    gl_FragColor = vec4(color, 0.9);
-  }
-`;
-
-// Create a custom shader material for the bubble
-export function createBubbleMaterial() {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uAmplitude: { value: 0.2 },
-      uFrequency: { value: 1.0 },
-      uColor: { value: new THREE.Color(0x0066ff) },
-      uBrightness: { value: 0.0 }
-    },
-    vertexShader,
-    fragmentShader,
-    transparent: true,
-    side: THREE.DoubleSide
-  });
-}
