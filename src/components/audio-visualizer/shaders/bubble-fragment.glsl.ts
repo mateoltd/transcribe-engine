@@ -15,7 +15,7 @@ export const fragmentShader = `
   void main() {
     // Calculate fresnel effect (edge glow)
     vec3 viewDirection = normalize(cameraPosition - vPosition);
-    float fresnel = pow(1.0 - dot(viewDirection, vNormal), 7.0); // Sharpened fresnel effect
+    float fresnel = pow(1.0 - dot(viewDirection, vNormal), 5.0); // Increased power for stronger edge effect
 
     // Create a pulsing glow effect
     float pulse = sin(uTime * 0.5) * 0.5 + 0.5;
@@ -33,7 +33,7 @@ export const fragmentShader = `
     baseColor = mix(baseColor, brightBlue, enhancedBrightness * 0.6);
 
     // Add inner glow based on audio reactivity
-    baseColor += glowColor * softGlow(uBrightness, 0.2); // Reduced inner glow
+    baseColor += glowColor * softGlow(uBrightness, 0.4);
 
     // Add outer glow based on fresnel with increased intensity
     float outerGlowIntensity = 1.2 * (pulse * 0.3 + 0.7);
@@ -46,7 +46,7 @@ export const fragmentShader = `
 
     // Apply subsurface scattering simulation
     float sss = pow(max(0.0, dot(viewDirection, -normalize(vNormal))), 2.0) * 0.2;
-    baseColor += brightBlue * (sss * 0.5); // Reduced SSS contribution
+    baseColor += brightBlue * sss;
 
     // Final color with slight transparency for the glow effect
     gl_FragColor = vec4(baseColor, 0.92);
