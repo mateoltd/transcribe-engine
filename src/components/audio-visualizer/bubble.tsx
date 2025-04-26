@@ -10,51 +10,94 @@ interface BubbleProps {
 }
 
 /**
- * 3D Bubble component that reacts to audio input
- * 
+ * Enhanced 3D Bubble component that reacts to audio input with improved visuals
+ *
  * @param volume - Audio volume value between 0 and 1
  */
 export function Bubble({ volume }: BubbleProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial | null>(null);
-  
-  // Initialize material
+  const glowRef = useRef<THREE.Mesh>(null);
+
+  // Initialize materials
   useEffect(() => {
     if (meshRef.current) {
+      // Create and apply the main bubble material
       materialRef.current = createBubbleMaterial();
       meshRef.current.material = materialRef.current;
+
+      // Make sure the mesh casts shadows for better visual depth
+      if (meshRef.current) {
+        meshRef.current.castShadow = true;
+        meshRef.current.receiveShadow = true;
+      }
     }
   }, []);
-  
-  // Animation loop
+
+  // Animation loop with enhanced effects
   useFrame(({ clock }) => {
     if (materialRef.current) {
-      // Update time uniform
-      materialRef.current.uniforms.uTime.value = clock.getElapsedTime();
-      
-      // Update amplitude based on volume
-      const targetAmplitude = 0.2 + volume * 0.8;
+      const time = clock.getElapsedTime();
+
+      // Update time uniform with smoother animation
+      materialRef.current.uniforms.uTime.value = time;
+
+      // Enhanced amplitude response based on volume
+      const baseAmplitude = 0.25; // Higher base amplitude for more pronounced effect
+      const volumeInfluence = 1.0; // Increased volume influence
+      const targetAmplitude = baseAmplitude + volume * volumeInfluence;
+
+      // Smooth transition for amplitude changes
       materialRef.current.uniforms.uAmplitude.value += (targetAmplitude - materialRef.current.uniforms.uAmplitude.value) * 0.1;
-      
-      // Update brightness based on volume
-      const targetBrightness = volume * 1.2;
-      materialRef.current.uniforms.uBrightness.value += (targetBrightness - materialRef.current.uniforms.uBrightness.value) * 0.1;
-      
-      // Rotate the bubble slightly
+
+      // Enhanced brightness response with more dynamic range
+      const targetBrightness = Math.pow(volume, 1.5) * 1.5; // Non-linear response for more dramatic effect
+      materialRef.current.uniforms.uBrightness.value += (targetBrightness - materialRef.current.uniforms.uBrightness.value) * 0.15;
+
       if (meshRef.current) {
-        meshRef.current.rotation.y += 0.001;
-        meshRef.current.rotation.x += 0.0005;
-        
-        // Scale based on volume
-        const targetScale = 1 + volume * 0.2;
-        meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+        // More organic rotation with slight variation
+        meshRef.current.rotation.y += 0.001 + volume * 0.0005;
+        meshRef.current.rotation.x += 0.0005 + volume * 0.0002;
+        meshRef.current.rotation.z += 0.0002 * Math.sin(time * 0.2);
+
+        // Enhanced scaling with volume - more responsive
+        const pulseEffect = Math.sin(time * 2) * 0.03 * volume; // Add subtle pulsing based on volume
+        const targetScale = 1 + volume * 0.3 + pulseEffect;
+        meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.15);
+      }
+
+      // Update glow mesh if present
+      if (glowRef.current) {
+        // Scale the glow slightly larger than the main bubble
+        const glowScale = (meshRef.current?.scale.x || 1) * 1.15;
+        glowRef.current.scale.set(glowScale, glowScale, glowScale);
+
+        // Match rotation with the main bubble
+        if (meshRef.current) {
+          glowRef.current.rotation.copy(meshRef.current.rotation);
+        }
       }
     }
   });
-  
+
   return (
-    <mesh ref={meshRef}>
-      <icosahedronGeometry args={[1, 20]} />
-    </mesh>
+    <group>
+      {/* Main bubble with high-poly geometry for smooth shading */}
+      <mesh ref={meshRef}>
+        <icosahedronGeometry args={[1, 24]} /> {/* Increased detail for smoother surface */}
+      </mesh>
+
+      {/* Outer glow layer */}
+      <mesh ref={glowRef} scale={1.15}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshBasicMaterial
+          color="#4080ff"
+          transparent={true}
+          opacity={0.15}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
   );
 }
